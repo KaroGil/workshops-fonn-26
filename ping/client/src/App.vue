@@ -4,7 +4,12 @@
       <p class="label">TABLE TENNIS</p>
 
       <!-- Score grid -->
-      <div class="score-grid" :style="{ gridTemplateColumns: `auto repeat(${state.totalSets}, 3rem)` }">
+      <div
+        class="score-grid"
+        :style="{
+          gridTemplateColumns: `auto repeat(${state.totalSets}, 3rem)`,
+        }"
+      >
         <!-- Header row: set numbers -->
         <div class="grid-cell header-cell name-col" />
         <div
@@ -24,7 +29,8 @@
               :disabled="connected !== 'server' || state.winner !== null"
               @click="score(pi as 0 | 1)"
             >
-              {{ player.name }}
+              {{ player.name }}{{ player.name
+              }}{{ getServingPlayerIndex() === pi ? " *" : "" }}
             </button>
           </div>
 
@@ -146,33 +152,60 @@ onUnmounted(() => {
   if (reconnectTimeout) clearTimeout(reconnectTimeout);
   ws?.close();
 });
+
+function getServingPlayerIndex(): 0 | 1 {
+  const p0Points = state.value.players[0].points;
+  const p1Points = state.value.players[1].points;
+
+  const currentSetIndex = state.value.currentSet - 1; // set 1 -> 0, set 2 -> 1, ...
+  const totalPointsInCurrentSet = p0Points + p1Points;
+
+  // Hvem starter med serve i dette settet:
+  // set 1 -> player 0
+  // set 2 -> player 1
+  // set 3 -> player 0
+  const firstServerThisSet = (currentSetIndex % 2) as 0 | 1;
+
+  // Ved 10-10 eller mer: bytt serve for hvert poeng
+  const serveBlockSize = p0Points >= 10 && p1Points >= 10 ? 1 : 2;
+
+  const serveChanges = Math.floor(totalPointsInCurrentSet / serveBlockSize);
+
+  return ((firstServerThisSet + serveChanges) % 2) as 0 | 1;
+}
 </script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap");
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-  :root {
-    --bg: #0b0c0f;
-    --card: #13151a;
-    --border: #1f2229;
-    --accent: #c8f060;
-    --text-primary: #e8eaf0;
-    --text-muted: #555b6e;
-    --text-dim: #2e3340;
-    --radius: 20px;
-    --row-font-size: 1rem;
-  }
+:root {
+  --bg: #0b0c0f;
+  --card: #13151a;
+  --border: #1f2229;
+  --accent: #c8f060;
+  --text-primary: #e8eaf0;
+  --text-muted: #555b6e;
+  --text-dim: #2e3340;
+  --radius: 20px;
+  --row-font-size: 1rem;
+}
 
-  body {
-    background: var(--bg);
-    color: var(--text-primary);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100dvh;
-    display: grid;
-    place-items: center;
-  }
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: "DM Sans", sans-serif;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
 </style>
 
 <style scoped>
@@ -195,14 +228,16 @@ onUnmounted(() => {
   position: relative;
   box-shadow:
     0 0 0 1px var(--dim),
-    0 40px 80px rgba(0,0,0,0.6),
-    inset 0 1px 0 rgba(255,255,255,0.04);
+    0 40px 80px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .card::before {
-  content: '';
+  content: "";
   position: absolute;
-  top: -1px; left: 15%; right: 15%;
+  top: -1px;
+  left: 15%;
+  right: 15%;
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--accent), transparent);
   border-radius: 999px;
@@ -210,7 +245,7 @@ onUnmounted(() => {
 }
 
 .label {
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
   font-size: 0.65rem;
   letter-spacing: 0.2em;
   color: var(--text-muted);
@@ -229,7 +264,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
   font-size: var(--row-font-size);
 }
 
@@ -269,7 +304,7 @@ onUnmounted(() => {
 
 /* Score button */
 .score-btn {
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
   font-size: var(--row-font-size);
   letter-spacing: 0.05em;
   color: var(--bg);
@@ -278,31 +313,40 @@ onUnmounted(() => {
   border-radius: 8px;
   padding: 0.6rem 1.25rem;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
   min-width: 10rem;
 }
 
-.score-btn:hover:not(:disabled) { opacity: 0.85; }
-.score-btn:active:not(:disabled) { transform: scale(0.97); }
-.score-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.score-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+.score-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.score-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
 
 /* Winner banner */
 .winner-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(200,240,96,0.08);
-  border: 1px solid rgba(200,240,96,0.2);
+  background: rgba(200, 240, 96, 0.08);
+  border: 1px solid rgba(200, 240, 96, 0.2);
   border-radius: 10px;
   padding: 0.75rem 1.25rem;
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
   font-size: 0.8rem;
   color: var(--accent);
   letter-spacing: 0.03em;
 }
 
 .reset-btn {
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -315,14 +359,16 @@ onUnmounted(() => {
   transition: opacity 0.15s;
 }
 
-.reset-btn:hover { opacity: 0.85; }
+.reset-btn:hover {
+  opacity: 0.85;
+}
 
 /* Connection badge */
 .source-badge {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: 'DM Mono', monospace;
+  font-family: "DM Mono", monospace;
   font-size: 0.65rem;
   letter-spacing: 0.1em;
   color: var(--text-muted);
@@ -330,7 +376,8 @@ onUnmounted(() => {
 }
 
 .dot {
-  width: 6px; height: 6px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--text-dim);
   flex-shrink: 0;
@@ -352,7 +399,12 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 </style>

@@ -2,13 +2,16 @@ import express, { Request, Response } from "express";
 import { createServer } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import path from "path";
-import { makeState, updateState, State } from "./game";
+import { makeState, updateState, State, useTimeout } from "./game";
 
 const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "../../client/dist")));
+app.get("/data", (_req: Request, res: Response) => {
+  res.json(state);
+});
 app.get("*", (_req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, "../../client/dist/index.html"));
 });
@@ -56,6 +59,12 @@ wss.on("connection", (ws: WebSocket) => {
       dispatch();
     } else if (type === "reset") {
       state = makeState(player1Name, player2Name, totalSets);
+      dispatch();
+    } else if (type === "timeout") {
+      console.log(
+        `Timeout called by ${playerIndex === 0 ? player1Name : player2Name}`,
+      );
+      state = useTimeout(state, playerIndex!);
       dispatch();
     }
   });

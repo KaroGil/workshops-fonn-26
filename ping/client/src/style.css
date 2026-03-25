@@ -1,0 +1,237 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0b0c0f;
+  --card: #13151a;
+  --border: #1f2229;
+  --accent: #c8f060;
+  --text-primary: #e8eaf0;
+  --text-muted: #555b6e;
+  --text-dim: #2e3340;
+  --radius: 20px;
+  --row-font-size: 1rem;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: "DM Sans", sans-serif;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+.point-indicator {
+  min-height: 1.25rem;
+  font-family: "DM Mono", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+
+.shell {
+  padding: 2rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3rem 4rem;
+  min-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  box-shadow:
+    0 0 0 1px var(--dim),
+    0 40px 80px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 15%;
+  right: 15%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  border-radius: 999px;
+  opacity: 0.6;
+}
+
+.label {
+  font-family: "DM Mono", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Score grid: 1 name column + N set columns (set dynamically via inline style) */
+.score-grid {
+  display: grid;
+  align-items: center;
+  row-gap: 0.5rem;
+  column-gap: 0;
+}
+
+.grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "DM Mono", monospace;
+  font-size: var(--row-font-size);
+}
+
+.name-col {
+  justify-content: flex-start;
+  padding-right: 1.5rem;
+}
+
+/* Header row */
+.header-cell {
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  color: var(--text-muted);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-cell.name-col {
+  border-bottom: 1px solid var(--border);
+}
+
+/* Score cells */
+.score-cell {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-height: 2.5rem;
+}
+
+.score-cell.set-won {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.score-cell.set-lost {
+  color: var(--text-primary);
+}
+
+/* Score button */
+.score-btn {
+  font-family: "DM Mono", monospace;
+  font-size: var(--row-font-size);
+  letter-spacing: 0.05em;
+  color: var(--bg);
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.25rem;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
+  min-width: 10rem;
+}
+
+.score-btn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+.score-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.score-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* Winner banner */
+.winner-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(200, 240, 96, 0.08);
+  border: 1px solid rgba(200, 240, 96, 0.2);
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  font-family: "DM Mono", monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+
+.reset-btn {
+  font-family: "DM Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--accent);
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.reset-btn:hover {
+  opacity: 0.85;
+}
+
+/* Connection badge */
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: "DM Mono", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  align-self: flex-start;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.source-badge.server .dot {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+.source-badge.connecting .dot {
+  background: #888;
+  animation: pulse 1s ease-in-out infinite;
+}
+.source-badge.disconnected .dot {
+  background: #e05555;
+  box-shadow: 0 0 6px #e05555;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}

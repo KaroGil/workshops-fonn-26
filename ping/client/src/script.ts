@@ -1,90 +1,11 @@
-<template>
-  <div class="shell">
-    <div class="card">
-      <p class="label">TABLE TENNIS</p>
-
-      <div class="point-indicator">
-        {{ pointIndicatorText }}
-      </div>
-
-      <div
-        class="score-grid"
-        :style="{
-          gridTemplateColumns: `auto repeat(${state.totalSets}, 3rem)`,
-        }"
-      >
-        <div class="grid-cell header-cell name-col" />
-        <div
-          v-for="s in state.totalSets"
-          :key="s"
-          class="grid-cell header-cell"
-        >
-          {{ s }}
-        </div>
-
-        <template v-for="(player, pi) in state.players" :key="pi">
-          <div class="grid-cell name-col">
-            <button
-              class="score-btn"
-              :disabled="connected !== 'server' || state.winner !== null"
-              @click="timeout(pi as 0 | 1)"
-            >
-              {{ player.timeoutUsed ? "Timeout (used)" : "Timeout" }}
-            </button>
-            <button
-              class="score-btn"
-              :disabled="connected !== 'server' || state.winner !== null"
-              @click="score(pi as 0 | 1)"
-            >
-              {{ player.name }}{{ getServingPlayerIndex() === pi ? " *" : "" }}
-            </button>
-          </div>
-
-          <div
-            v-for="s in state.totalSets"
-            :key="s"
-            class="grid-cell score-cell"
-            :class="{
-              'set-won': setWinner(s - 1) === pi,
-              'set-lost': setWinner(s - 1) !== null && setWinner(s - 1) !== pi,
-            }"
-          >
-            <span v-if="s - 1 < state.setHistory.length">
-              {{ state.setHistory[s - 1][pi] }}
-            </span>
-            <span v-else-if="s === state.currentSet">
-              {{ player.points }}
-            </span>
-          </div>
-        </template>
-      </div>
-
-      <div v-if="state.winner !== null" class="winner-banner">
-        🏓 {{ state.players[state.winner].name }} wins the match!
-        <button class="reset-btn" @click="reset">New game</button>
-      </div>
-
-      <div class="source-badge" :class="connected">
-        <span class="dot" />
-        <span v-if="connected === 'server'">live from server</span>
-        <span v-else-if="connected === 'connecting'">connecting…</span>
-        <span v-else>disconnected — reconnecting…</span>
-      </div>
-    </div>
-  </div>
-</template>
-
-<style src="./style.css" />
-<script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
 
-type SetScore = [number, number];
+export type SetScore = [number, number];
 
 interface PlayerState {
   name: string;
   points: number;
   sets: number;
-  timeoutUsed: boolean;
 }
 
 interface State {
@@ -103,8 +24,8 @@ type PointIndicator = {
 
 const state = ref<State>({
   players: [
-    { name: "…", points: 0, sets: 0, timeoutUsed: false },
-    { name: "…", points: 0, sets: 0, timeoutUsed: false },
+    { name: "…", points: 0, sets: 0 },
+    { name: "…", points: 0, sets: 0 },
   ],
   totalSets: 3,
   currentSet: 1,
@@ -117,21 +38,13 @@ const connected = ref<"server" | "connecting" | "disconnected">("connecting");
 let ws: WebSocket | null = null;
 let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
-function timeout(playerIndex: number) {
-  if (playerIndex !== 0 && playerIndex !== 1) return;
-
-  if (ws?.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: "timeout", playerIndex }));
-  }
-}
-
-function setWinner(setIndex: number): 0 | 1 | null {
+export function setWinner(setIndex: number): 0 | 1 | null {
   const scores = state.value.setHistory[setIndex];
   if (!scores) return null;
   return scores[0] > scores[1] ? 0 : 1;
 }
 
-function getServingPlayerIndex(): 0 | 1 {
+export function getServingPlayerIndex(): 0 | 1 {
   const p0Points = state.value.players[0].points;
   const p1Points = state.value.players[1].points;
 
@@ -145,7 +58,7 @@ function getServingPlayerIndex(): 0 | 1 {
   return ((firstServerThisSet + serveChanges) % 2) as 0 | 1;
 }
 
-function getPointIndicator(stateValue: State): PointIndicator {
+export function getPointIndicator(stateValue: State): PointIndicator {
   if (stateValue.winner !== null) return null;
 
   const p0 = stateValue.players[0];
@@ -181,7 +94,7 @@ function getPointIndicator(stateValue: State): PointIndicator {
   return null;
 }
 
-const pointIndicatorText = computed(() => {
+export const pointIndicatorText = computed(() => {
   const indicator = getPointIndicator(state.value);
   if (!indicator) return "";
 
@@ -210,13 +123,13 @@ function connect() {
   ws.onerror = () => ws?.close();
 }
 
-function score(playerIndex: 0 | 1) {
+export function score(playerIndex: 0 | 1) {
   if (ws?.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: "score", playerIndex }));
   }
 }
 
-function reset() {
+export function reset() {
   if (ws?.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: "reset" }));
   }
@@ -227,4 +140,3 @@ onUnmounted(() => {
   if (reconnectTimeout) clearTimeout(reconnectTimeout);
   ws?.close();
 });
-</script>
